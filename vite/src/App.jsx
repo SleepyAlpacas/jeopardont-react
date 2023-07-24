@@ -1,33 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react'
+import questionsData from '../questionsData.jsx'
+import Board from '../components/Board.jsx'
+import PlayerPanel from '../components/PlayerPanel.jsx'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [boardState, setBoardState] = React.useState(initBoard());
+
+  function initBoard(){
+      let initializedBoard = [];
+      for (const column of questionsData['board-data']){
+        let boardColumn = column['column-questions'].map(question => {
+          return {
+            ...question,
+            answered: false,
+            playerAnswered: undefined,
+            characterAnswered: undefined
+          }
+        })
+  
+        initializedBoard.push(boardColumn);
+      }
+  
+      return initializedBoard;
+  }
+  
+  console.log(boardState)
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Board />
+      <PlayerPanel />
     </>
   )
 }

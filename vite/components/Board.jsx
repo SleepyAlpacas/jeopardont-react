@@ -16,12 +16,15 @@ export default function Board(){
 
     for (const column of questionsArray){
         const questionColumn = column['column-questions'].map(question => 
+            question?.answered? 
+            <div className='board-cell'>${question.value}</div>:
             <button className='board-cell'>${question.value}</button>
+
         )
-        questionElements.push(<div className='board-column'> {questionColumn} </div>);
+        questionElements.push(<div className='board-column' key={nanoid()}> {questionColumn} </div>);
     }
 
-    console.log(questionElements);
+
 
 
     return (

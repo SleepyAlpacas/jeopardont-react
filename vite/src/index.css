@@ -1,3 +1,6 @@
+*{
+  margin: 0;
+}
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -12,7 +15,10 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
 }
+
+
 /*
 
 a {
@@ -73,7 +79,7 @@ button:focus-visible {
 
 
 #board{
-  height: 73vh;
+  height: 71vh;
   display:block;
 }
 .board-row{
@@ -82,7 +88,7 @@ button:focus-visible {
   height: 16%;
   text-align: center;
   align-items: center;
-  border: 1px solid black;
+
 }
 
 .board-column{
@@ -108,4 +114,33 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+
+/*player panel stuff*/
+#player-panel{
+  border: 5px solid blue;
+  height: 27vh;
+  margin: auto;
+  display: flex; /*flex*/
+  justify-content: space-around;
+}
+
+.player{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-icon{
+  height: 10vh;
+}
+
+.buttons{
+  display:none;
+}
+
+.power-button{
+  display:none;
 }
