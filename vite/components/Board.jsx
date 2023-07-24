@@ -1,31 +1,30 @@
 import React from 'react'
-import questionsData from '../questionsData'
-import { nanoid } from 'nanoid';
 
-export default function Board(){
-    const questionsArray = questionsData['board-data'];
-    const boardTitleElements = <div className='board-row'> 
+export default function Board(props){
+
+    const boardTitleElements = <div className='board-row' key={props.titles.rowId}> 
         {
-            questionsArray.map(column => 
-                <div className='board-cell' key={nanoid()}> {column.title} </div>
+            props.titles.titleData.map(column => 
+                <div className='board-cell' key={column.id}> {column.title} </div>
             )
         }
     </div>; 
 
     let questionElements = [];
 
-    for (const column of questionsArray){
-        const questionColumn = column['column-questions'].map(question => 
-            question?.answered? 
-            <div className='board-cell'>${question.value}</div>:
-            <button className='board-cell'>${question.value}</button>
+    for (const column of props.boardState){
+
+        const questionColumn = column.questions.map(question => 
+            question.answered? 
+            <div className='board-cell' key={question.id}>${question.value}</div>:
+            <button onClick={() => props.showQuestion(column.columnId, question.id)} 
+                className='board-cell' key={question.id}>${question.value}</button>
 
         )
-        questionElements.push(<div className='board-column' key={nanoid()}> {questionColumn} </div>);
+        questionElements.push(<div className='board-column' key={column.columnId}> {questionColumn} </div>);
     }
 
-
-
+    console.log(questionElements)
 
     return (
         <div id="board">
