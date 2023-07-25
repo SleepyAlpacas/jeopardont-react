@@ -6,7 +6,13 @@ export const Clever = require('Mr_Clever-6A.PNG.webp');
 */
 
 import Happy from './Mr._Happy.webp';
+import Bump from './Bump2.webp';
+import Nosey from './Mr-nosey-5a.webp';
+import Clever from './Mr_Clever-6A.PNG.webp'
 
 export {
-    Happy
+    Happy,
+    Bump,
+    Nosey,
+    Clever
 };

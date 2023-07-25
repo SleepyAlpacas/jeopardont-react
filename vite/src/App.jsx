@@ -14,7 +14,9 @@ function App() {
   const [currentScreen, setCurrentScreen] = React.useState('board');
   const titles = initTitles();
 
-  console.log(questionsLeft);
+  const [playerData, setPlayerData] = React.useState(initPlayers());
+
+  console.log(playerData);
 
   //initialize boardState to array of objects of column arrays of question objects
   function initBoard(){
@@ -45,6 +47,26 @@ function App() {
       });
     }
     return {titleData: initializedTitles, rowId: nanoid()};
+  }
+
+
+  function initPlayers(){
+    const playerCount = 4;
+    let players = [];
+    for (let i = 0; i < playerCount; i++){
+      players.push(
+        {
+          playerNum: i,
+          character: "Clever",
+          money: 0,
+          buzzed: false,
+          powerUses: 0,
+          id: nanoid()
+        }
+      )
+    }
+
+    return players;
   }
 
   function greyOutQuestion(){
@@ -80,6 +102,16 @@ function App() {
     greyOutQuestion()
   }
 
+  function correctOrIncorrectAnswer(playerNum, correct){
+    let newPlayerData = [...playerData];
+    let correctPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+    correct? correctPlayer.money += currentQuestion.value : correctPlayer.money -= currentQuestion.value;
+    setPlayerData(newPlayerData);
+
+    correct && showAnswer();
+  }
+
+
   return (
     <>
       {currentScreen == 'board' && <Board boardState = {boardState} titles={titles} showQuestion={showQuestion}/>}
@@ -87,7 +119,7 @@ function App() {
         <QuestionAnswerScreen currentScreen = {currentScreen} showAnswer={showAnswer} showBoard={showBoard}
         question={currentQuestion.question} answer={currentQuestion.answer}/>}
       {currentScreen == 'wager' && <Wager />}
-      <PlayerPanel />
+      <PlayerPanel playerData={playerData} correctOrIncorrectAnswer={correctOrIncorrectAnswer}/>
     </>
   )
 }

@@ -24,8 +24,6 @@ export default function Board(props){
         questionElements.push(<div className='board-column' key={column.columnId}> {questionColumn} </div>);
     }
 
-    console.log(questionElements)
-
     return (
         <div id="board">
             {boardTitleElements}
