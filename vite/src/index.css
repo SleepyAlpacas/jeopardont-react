@@ -77,8 +77,112 @@ button:focus-visible {
 }
 */
 
+/*character select stuff*/
+
+.menu-select{
+  height: 73vh;
+  display:flex;
+  align-items: flex-start;
+  align-content: space-around;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.character{
+  height: 37%;
+  width: 21%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.buzzer-item{
+  height: 37%;
+  width: 21%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  background-color: white;
+}
+
+.small-character-name{
+  font-size: 2.0rem;
+}
+
+.character-info{
+  height: 27%;
+  width: inherit;
+  position: absolute;
+}
+
+.character-info div{
+  visibility: hidden;
+  height: 100%;
+  width: 100%;
+  flex-wrap:wrap;
+  align-content: center;
+  display:flex;
+  justify-content: center;
+  padding: 5%;
+}
+
+.character-info:hover div{
+
+  background-color: rgb(66,66,66);
+  visibility: visible;
+}
+
+.character-info-text{
+  text-align: center;
+  font-weight: bold;
+  font-size:medium;
+}
+.green-text{
+  color: lightgreen;
+}
+.red-text{
+  color:red;
+}
+.yellow-text{
+  color: yellow;
+}
+
+.character-icon{
+  max-width: 80%;
+  max-height: 70%;
+  margin: 3%;
+}
+
+.next-button{
+  position:fixed;
+  text-align: center;
+  text-justify: center;
+  top: 37vh;
+  right:0;
+  height: 10vh;
+  width: 5vw;
+  z-index: 5;
+}
+
+.back-button{
+  position:fixed;
+  text-align: center;
+  text-justify: center;
+  top: 37vh;
+  left: 0;
+  height: 10vh;
+  width: 5vw;
+  z-index: 5;
+}
 
 
+
+/*board stuff*/
 #board{
   height: 71vh;
   display:block;

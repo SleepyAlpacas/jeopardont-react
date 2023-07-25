@@ -1,125 +1,21 @@
 import React from 'react'
-import questionsData from '../questionsData.jsx'
-import Board from '../components/Board.jsx'
-import PlayerPanel from '../components/PlayerPanel.jsx'
-import QuestionAnswerScreen from '../components/QuestionAnswerScreen.jsx'
-import { nanoid } from 'nanoid';
-
-var currentQuestion;
-var currentQuestionId;
-var questionsLeft = questionsData.rows * questionsData.columns;
+import Hoster from './components/Hoster';
+import Joiner from './components/Joiner';
 
 function App() {
-  const [boardState, setBoardState] = React.useState(initBoard());
-  const [currentScreen, setCurrentScreen] = React.useState('board');
-  const titles = initTitles();
 
-  const [playerData, setPlayerData] = React.useState(initPlayers());
-
-  console.log(playerData);
-
-  //initialize boardState to array of objects of column arrays of question objects
-  function initBoard(){
-      let initializedBoard = [];
-      for (const column of questionsData['board-data']){
-        let boardColumn = column.map(question => {
-            return {
-              ...question,
-              answered: false,
-              playerAnswered: undefined,
-              characterAnswered: undefined,
-              id: nanoid()
-            }
-          })
-  
-        initializedBoard.push({questions: boardColumn, columnId: nanoid()});
-      }
-      
-      return initializedBoard;
-  }
-  
-  function initTitles(){
-    let initializedTitles = [];
-    for (const entry of questionsData['titles']){
-      initializedTitles.push({
-        title: entry,
-        id: nanoid()
-      });
-    }
-    return {titleData: initializedTitles, rowId: nanoid()};
-  }
-
-
-  function initPlayers(){
-    const playerCount = 4;
-    let players = [];
-    for (let i = 0; i < playerCount; i++){
-      players.push(
-        {
-          playerNum: i,
-          character: "Clever",
-          money: 0,
-          buzzed: false,
-          powerUses: 0,
-          id: nanoid()
-        }
-      )
-    }
-
-    return players;
-  }
-
-  function greyOutQuestion(){
-    setBoardState(oldBoardState => {
-      let newBoardState = [...oldBoardState];
-      let greyedOutQuestion = findQuestion(currentQuestionId[0], currentQuestionId[1], newBoardState);
-      greyedOutQuestion.answered = true;
-      return newBoardState;
-    })
-
-    questionsLeft--;
-
-  }
-
-  function findQuestion(columnId, questionId, boardArray){
-    const targetColumn = boardArray.find(column => column.columnId == columnId).questions;
-    const targetQuestion = targetColumn.find(question => question.id == questionId);
-    return targetQuestion;
-  }
-
-  function showQuestion(columnId, questionId){
-    currentQuestion = findQuestion(columnId, questionId, boardState);
-    currentQuestionId = [columnId, questionId];
-    setCurrentScreen('question');
-  }
-  
-  function showAnswer(){
-    setCurrentScreen('answer');
-  }
-
-  function showBoard(){
-    setCurrentScreen('board');
-    greyOutQuestion()
-  }
-
-  function correctOrIncorrectAnswer(playerNum, correct){
-    let newPlayerData = [...playerData];
-    let correctPlayer = newPlayerData.find(player => player.playerNum == playerNum);
-    correct? correctPlayer.money += currentQuestion.value : correctPlayer.money -= currentQuestion.value;
-    setPlayerData(newPlayerData);
-
-    correct && showAnswer();
-  }
-
+  const [gameMode, setGameMode] = React.useState("");
 
   return (
     <>
-      {currentScreen == 'board' && <Board boardState = {boardState} titles={titles} showQuestion={showQuestion}/>}
-      {(currentScreen == 'question' || currentScreen == 'answer') && 
-        <QuestionAnswerScreen currentScreen = {currentScreen} showAnswer={showAnswer} showBoard={showBoard}
-        question={currentQuestion.question} answer={currentQuestion.answer}/>}
-      {currentScreen == 'wager' && <Wager />}
-      <PlayerPanel playerData={playerData} correctOrIncorrectAnswer={correctOrIncorrectAnswer}/>
+      {!gameMode &&
+        <>
+          <button onClick={() => setGameMode("host")}>Host Game</button>
+          <button onClick={() => setGameMode("join")}>Join Game</button>
+        </>
+      }
+      {gameMode == 'host' && <Hoster />}
+      {gameMode == 'join' && <Joiner />}
     </>
   )
 }
