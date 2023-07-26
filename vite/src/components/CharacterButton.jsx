@@ -14,7 +14,7 @@ import React from "react";
 
 export default function CharacterButton(props){
     return(
-        <button onClick={() => props.setPlayerCharacter(1, props.characterData)} className="character">
+        <button onClick={props.setPlayerCharacter && (() => props.setPlayerCharacter(props.characterData, props.playerNum))} className="character">
             <h1 className="character-name">{props.characterData.name}</h1>
             <img className="character-icon" src={props.characterData.icon} />
             <div className="character-info">

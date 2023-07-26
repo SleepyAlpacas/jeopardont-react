@@ -56,10 +56,8 @@ io.on('connection', (socket)=>{
         io.to(room).emit('enable valid buzzer', buzzedPlayers);
     });
 
-    socket.on('character select', ({characterNum, buzzerNum, playerNum, room}) => {
-        console.log(characterNum + " " + playerNum);
-        console.log("HEY");
-        io.to(room).emit('character select', ({characterNum, buzzerNum, playerNum}));
+    socket.on('character select', ({characterChoiceData, playerNum, room}) => {
+        io.to(room).emit('character select', ({characterChoiceData, playerNum}));
     });
 
     socket.on('power', ({characterNum, playerNum, room}) =>{

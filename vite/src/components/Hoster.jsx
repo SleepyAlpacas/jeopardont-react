@@ -15,6 +15,7 @@ import CharacterSelect from './CharacterSelect.jsx'
 var currentQuestion;
 var currentQuestionId;
 var questionsLeft = questionsData.rows * questionsData.columns;
+var playerCount = 4;
 
 const socket = io('ws://localhost:8080');
 
@@ -22,9 +23,9 @@ const socket = io('ws://localhost:8080');
 function Hoster() {
   const [boardState, setBoardState] = React.useState(initBoard());
   const [currentScreen, setCurrentScreen] = React.useState('room-menu');
-  const titles = initTitles();
-
   const [playerData, setPlayerData] = React.useState(initPlayers());
+
+  const titles = initTitles();
 
 
 
@@ -61,7 +62,7 @@ function Hoster() {
 
 
   function initPlayers(){
-    const playerCount = 4;
+
     let players = [];
     for (let i = 0; i < playerCount; i++){
       players.push(
@@ -91,11 +92,25 @@ function Hoster() {
     setCurrentScreen('character-select'); 
   });
 
+  socket.on('character select', ({characterChoiceData, playerNum}) => {
+    console.log(characterChoiceData);
+    setPlayerCharacter(playerNum, characterChoiceData);
+  })
+
   function setPlayerCharacter(playerNum, characterData){
     let newPlayerData = [...playerData]
     const targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
     targetPlayer.character = characterData;
     setPlayerData(newPlayerData);
+
+    if (checkPlayersReady()){
+      setCurrentScreen('board');
+    }
+  }
+
+  function checkPlayersReady(){
+    const readyPlayers = playerData.filter(player => player.character);
+    return readyPlayers.length == playerCount;
   }
 
   function greyOutQuestion(){
@@ -144,7 +159,7 @@ function Hoster() {
   return (
     <>
       {currentScreen == 'room-menu' && <RoomMenu handleButton={createRoom} host={true}/>}
-      {currentScreen == 'character-select' && <CharacterSelect characterData={characterData} setPlayerCharacter={setPlayerCharacter}/>}
+      {currentScreen == 'character-select' && <CharacterSelect characterData={characterData}/>}
       {currentScreen == 'board' && <Board boardState = {boardState} titles={titles} showQuestion={showQuestion}/>}
       {(currentScreen == 'question' || currentScreen == 'answer') && 
         <QuestionAnswerScreen currentScreen = {currentScreen} showAnswer={showAnswer} showBoard={showBoard}
