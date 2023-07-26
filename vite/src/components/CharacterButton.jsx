@@ -1,6 +1,6 @@
 import React from "react";
 
-/*        <button onclick="setPlayerCharacter(0)" class="character">
+/*        <button onclick="setCharacter(0)" class="character">
             
             <h1 class="character-name">Mr. Happy</h1>
             <div class="break"></div>
@@ -14,7 +14,7 @@ import React from "react";
 
 export default function CharacterButton(props){
     return(
-        <button onClick={props.setPlayerCharacter && (() => props.setPlayerCharacter(props.characterData, props.playerNum))} className="character">
+        <button onClick={props.setCharacter && (() => props.setCharacter(props.characterData, props.playerNum))} className="character">
             <h1 className="character-name">{props.characterData.name}</h1>
             <img className="character-icon" src={props.characterData.icon} />
             <div className="character-info">

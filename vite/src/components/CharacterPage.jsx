@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 
 export default function CharacterPage(props){
     const characterButtonElements = props.characterPageData.map(
-        character => <CharacterButton setPlayerCharacter = {props.setPlayerCharacter}
+        character => <CharacterButton setCharacter = {props.setCharacter}
          key={nanoid()} characterData={character} playerNum = {props.playerNum}/>
     )
 

@@ -20,6 +20,24 @@ io.on('connection', (socket)=>{
         }
     });
 
+    socket.on('join request', (room) => {
+        if (!room) {
+            socket.emit('join fail', room);
+            return;
+        }
+        if (io.sockets.adapter.rooms.get(room)){
+            io.to(room).emit('join request', {socketId: socket.id})
+        }
+    });
+
+    socket.on('room full', (socketId) => {
+        io.to(socketId).emit('room full');
+    });
+
+    socket.on('join success', ({socketId, playerNum, room}) => {
+        io.to(socketId).emit('join success', ({room, playerNum}));
+    });
+
     socket.on('join room', (room) => {
         if (!room) {
             socket.emit('join fail', room);
@@ -39,6 +57,7 @@ io.on('connection', (socket)=>{
     socket.on('buzz', ({playerNum, buzzerNum, room}) => {
         io.to(room).emit('buzz', ({playerNum, buzzerNum}));
     });
+
 
     socket.on('correct answer', () =>{
         io.emit('correct answer');

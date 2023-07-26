@@ -26,7 +26,7 @@ export default function CharacterSelect(props) {
             <CharacterPage key={nanoid()} characterPageData={characterPageData[i]} 
             prevPage = {prevPage} nextPage = {nextPage}
             prevPageExists={i != 0} nextPageExists={i != characterPageData.length - 1}
-            setPlayerCharacter = {props.setPlayerCharacter} playerNum = {props.playerNum}/>
+            setCharacter = {props.setCharacter} playerNum = {props.playerNum}/>
         )
     }
 

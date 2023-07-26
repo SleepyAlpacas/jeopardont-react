@@ -23,7 +23,7 @@ const socket = io('ws://localhost:8080');
 function Hoster() {
   const [boardState, setBoardState] = React.useState(initBoard());
   const [currentScreen, setCurrentScreen] = React.useState('room-menu');
-  const [playerData, setPlayerData] = React.useState(initPlayers());
+  const [playerData, setPlayerData] = React.useState([]);
 
   const titles = initTitles();
 
@@ -61,41 +61,61 @@ function Hoster() {
   }
 
 
-  function initPlayers(){
+  function addPlayer(playerNum){
 
-    let players = [];
-    for (let i = 0; i < playerCount; i++){
-      players.push(
+    setPlayerData(oldPlayerData => 
+      [...oldPlayerData,
         {
-          playerNum: i,
+          playerNum: playerNum,
           character: "",
           money: 0,
           buzzed: false,
           powerUses: 0,
           id: nanoid()
         }
-      )
-    }
+      ]
+    )
 
-    return players;
   }
+  console.log(playerData);
 
   function createRoom(roomId){
     socket.emit('create room', roomId);
   }
 
-  socket.on('create fail', () => {
-    alert('invalid room code');
-  });
+  React.useEffect(() =>{
+    socket.on('create fail', () => {
+      alert('invalid room code');
+    });
 
-  socket.on('create success', () => {
-    setCurrentScreen('character-select'); 
-  });
+    socket.on('create success', () => {
+      setCurrentScreen('character-select'); 
+    });
 
-  socket.on('character select', ({characterChoiceData, playerNum}) => {
-    console.log(characterChoiceData);
-    setPlayerCharacter(playerNum, characterChoiceData);
-  })
+    socket.on('character select', ({characterChoiceData, playerNum}) => {
+      console.log(characterChoiceData);
+      setPlayerCharacter(playerNum, characterChoiceData);
+    });
+
+    socket.on('join request', ({room, socketId}) => {
+      if (checkRoomFull()){
+        socket.emit('room full', (socketId));
+      }
+      else{
+        const playerNum = findOpenPlayerSlot();
+        console.log(playerNum);
+        socket.emit('join success', ({socketId, playerNum, room}));
+        addPlayer(playerNum);
+      }
+    });
+    /*
+    socket.on('buzz', (buzzer) => {
+      let snd = new Audio(buzzer);
+      snd.play();
+      console.log("hi");
+    });
+    */
+  }, [])
 
   function setPlayerCharacter(playerNum, characterData){
     let newPlayerData = [...playerData]
@@ -107,6 +127,22 @@ function Hoster() {
       setCurrentScreen('board');
     }
   }
+
+  function checkRoomFull(){
+    return playerData.length == playerCount;
+  }
+
+  function findOpenPlayerSlot(){
+    for (let i = 0; i < playerCount; i++){
+      let playerExists = playerData.find(player => player.playerNum == i);
+      console.log(playerData.find(player => player.playerNum == i));
+      if (!playerExists){
+        return i;
+      }
+    }
+  }
+
+  
 
   function checkPlayersReady(){
     const readyPlayers = playerData.filter(player => player.character);
