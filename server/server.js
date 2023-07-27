@@ -43,11 +43,13 @@ io.on('connection', (socket)=>{
     });
 
     socket.on('join success', ({socketId, playerNum, room}) => {
+        console.log(`JOIN SUCCESS socketId: ${socketId} playerNum: ${playerNum} room: ${room}`)
         io.to(socketId).emit('join success', ({room, playerNum}));
     });
 
     socket.on('character select', ({characterChoiceData, playerNum, room}) => {
         io.to(room).emit('character select', ({characterChoiceData, playerNum}));
+        console.log(`START ${room} ${playerNum} ${characterChoiceData} END`);
     });
 
     socket.on('buzz', ({playerNum, buzzerNum, room}) => {

@@ -19,7 +19,7 @@ export default function Joiner(){
     const [selectedCharacterData, setSelectedCharacterData] = React.useState();
 
     function joinRoom(room){
-        socket.emit('join request', room);
+        socket.emit('join request', (room));
     }
 
     React.useEffect(() => {
@@ -32,17 +32,17 @@ export default function Joiner(){
         });
 
         socket.on('join success', ({room: roomId, playerNum: newPlayerNum}) =>{
+
             room = roomId;
             setPlayerNum(newPlayerNum);
             setCurrentScreen('character-select')
-            console.log(playerNum);
         })
 
 
         
     }, []);
 
-
+    console.log(room);
 
     function setCharacter(characterChoiceData, playerNum){
         socket.emit('character select', ({characterChoiceData, playerNum, room}));

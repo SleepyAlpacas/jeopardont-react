@@ -16,6 +16,7 @@ var currentQuestion;
 var currentQuestionId;
 var questionsLeft = questionsData.rows * questionsData.columns;
 var playerCount = 4;
+var room = ""
 
 //http://localhost:5173/
 //ws://localhost:8080
@@ -92,16 +93,17 @@ function Hoster() {
       alert('invalid room code');
     });
 
-    socket.on('create success', () => {
+    socket.on('create success', (roomId) => {
+      room = roomId;
       setCurrentScreen('character-select'); 
     });
 
     socket.on('character select', ({characterChoiceData, playerNum}) => {
       setPlayerCharacter(playerNum, characterChoiceData);
-      console.log("hey")
+
     });
 
-    socket.on('join request', ({room, socketId}) => {
+    socket.on('join request', ({socketId}) => {
       if (checkRoomFull()){
         socket.emit('room full', (socketId));
       }
@@ -121,15 +123,20 @@ function Hoster() {
   }, [])
 
   function setPlayerCharacter(playerNum, characterData){
-    let newPlayerData = [...playerData]
-    const targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
-    targetPlayer.character = characterData;
-    setPlayerData(newPlayerData);
+
+    setPlayerData(oldPlayerData => {
+      let newPlayerData = [...oldPlayerData]
+      const targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+      targetPlayer.character = characterData;
+      return newPlayerData;
+    })
 
     if (checkPlayersReady()){
       setCurrentScreen('board');
     }
   }
+
+
 
   function checkRoomFull(){
     return playerData.length == playerCount;
@@ -158,8 +165,10 @@ function Hoster() {
   }  
 
   function checkPlayersReady(){
-    const readyPlayers = playerData.filter(player => player.character);
-    return readyPlayers.length == playerCount;
+    console.log(playerDataRef.current);
+    const readyPlayers = playerDataRef.current.filter(player => player.character);
+    console.log(readyPlayers)
+    return readyPlayers.length + 1 == playerCount;
   }
 
   function greyOutQuestion(){
@@ -214,7 +223,7 @@ function Hoster() {
         <QuestionAnswerScreen currentScreen = {currentScreen} showAnswer={showAnswer} showBoard={showBoard}
         question={currentQuestion.question} answer={currentQuestion.answer}/>}
       {currentScreen == 'wager' && <Wager />}
-      {currentScreen != 'room-menu' && <PlayerPanel deletePlayer = {deletePlayer} deletePlayerVisible = {currentScreen == "room-menu"}
+      {currentScreen != 'room-menu' && <PlayerPanel deletePlayer = {deletePlayer} deletePlayerVisible = {currentScreen == "character-select"}
        playerData={playerData} correctOrIncorrectAnswer={correctOrIncorrectAnswer}/>}
     </>
   )
