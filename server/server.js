@@ -6,6 +6,11 @@ const io = require('socket.io')(http, {
 io.on('connection', (socket)=>{
     console.log(socket.id);
 
+    socket.on('disconnect', (socket) => {
+        console.log('disconnected');
+        console.log(socket.socketId);
+    });
+
     socket.on('create room', (room) => {
         if (!room) {
             socket.emit('create fail', room);
@@ -22,11 +27,14 @@ io.on('connection', (socket)=>{
 
     socket.on('join request', (room) => {
         if (!room) {
-            socket.emit('join fail', room);
+            socket.emit('join fail');
             return;
         }
         if (io.sockets.adapter.rooms.get(room)){
             io.to(room).emit('join request', {socketId: socket.id})
+        }
+        else{
+            socket.emit('join fail');
         }
     });
 
@@ -38,25 +46,14 @@ io.on('connection', (socket)=>{
         io.to(socketId).emit('join success', ({room, playerNum}));
     });
 
-    socket.on('join room', (room) => {
-        if (!room) {
-            socket.emit('join fail', room);
-            return;
-        }
-        if (io.sockets.adapter.rooms.get(room)){
-            console.log(io.sockets.adapter.rooms.get(room).size);
-            let player = io.sockets.adapter.rooms.get(room).size;
-            socket.join(room);
-            socket.emit('join success', ({room, player}));
-        }
-        else{
-            socket.emit('join fail', room);
-        }
+    socket.on('character select', ({characterChoiceData, playerNum, room}) => {
+        io.to(room).emit('character select', ({characterChoiceData, playerNum}));
     });
 
     socket.on('buzz', ({playerNum, buzzerNum, room}) => {
         io.to(room).emit('buzz', ({playerNum, buzzerNum}));
     });
+
 
 
     socket.on('correct answer', () =>{
@@ -75,9 +72,7 @@ io.on('connection', (socket)=>{
         io.to(room).emit('enable valid buzzer', buzzedPlayers);
     });
 
-    socket.on('character select', ({characterChoiceData, playerNum, room}) => {
-        io.to(room).emit('character select', ({characterChoiceData, playerNum}));
-    });
+
 
     socket.on('power', ({characterNum, playerNum, room}) =>{
         io.to(room).emit('power', ({characterNum, playerNum}));

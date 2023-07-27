@@ -22,20 +22,27 @@ export default function Joiner(){
         socket.emit('join request', room);
     }
 
-    socket.on('join fail', () => {
-        alert('invalid room id');
-    });
+    React.useEffect(() => {
+        socket.on('join fail', () => {
+            alert("room doesn't exist");
+        });
 
-    socket.on('room full', () => {
-        alert('full room');
-    });
+        socket.on('room full', () => {
+            alert('full room');
+        });
 
-    socket.on('join success', ({room: roomId, playerNum: newPlayerNum}) =>{
-        room = roomId;
-        setPlayerNum(newPlayerNum);
-        setCurrentScreen('character-select')
-        console.log(playerNum);
-    })
+        socket.on('join success', ({room: roomId, playerNum: newPlayerNum}) =>{
+            room = roomId;
+            setPlayerNum(newPlayerNum);
+            setCurrentScreen('character-select')
+            console.log(playerNum);
+        })
+
+
+        
+    }, []);
+
+
 
     function setCharacter(characterChoiceData, playerNum){
         socket.emit('character select', ({characterChoiceData, playerNum, room}));

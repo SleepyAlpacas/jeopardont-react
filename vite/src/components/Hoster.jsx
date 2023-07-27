@@ -17,6 +17,8 @@ var currentQuestionId;
 var questionsLeft = questionsData.rows * questionsData.columns;
 var playerCount = 4;
 
+//http://localhost:5173/
+//ws://localhost:8080
 const socket = io('ws://localhost:8080');
 
 
@@ -24,6 +26,8 @@ function Hoster() {
   const [boardState, setBoardState] = React.useState(initBoard());
   const [currentScreen, setCurrentScreen] = React.useState('room-menu');
   const [playerData, setPlayerData] = React.useState([]);
+  const playerDataRef = React.useRef();
+  playerDataRef.current = playerData;
 
   const titles = initTitles();
 
@@ -77,7 +81,7 @@ function Hoster() {
     )
 
   }
-  console.log(playerData);
+
 
   function createRoom(roomId){
     socket.emit('create room', roomId);
@@ -93,8 +97,8 @@ function Hoster() {
     });
 
     socket.on('character select', ({characterChoiceData, playerNum}) => {
-      console.log(characterChoiceData);
       setPlayerCharacter(playerNum, characterChoiceData);
+      console.log("hey")
     });
 
     socket.on('join request', ({room, socketId}) => {
@@ -103,7 +107,6 @@ function Hoster() {
       }
       else{
         const playerNum = findOpenPlayerSlot();
-        console.log(playerNum);
         socket.emit('join success', ({socketId, playerNum, room}));
         addPlayer(playerNum);
       }
@@ -134,15 +137,25 @@ function Hoster() {
 
   function findOpenPlayerSlot(){
     for (let i = 0; i < playerCount; i++){
-      let playerExists = playerData.find(player => player.playerNum == i);
-      console.log(playerData.find(player => player.playerNum == i));
+      let playerExists = playerDataRef.current.find(player => player.playerNum == i);
       if (!playerExists){
         return i;
       }
     }
   }
 
-  
+
+  function deletePlayer(playerNum){
+    const newPlayerData = [...playerData];
+    for (let i = 0; i < playerCount; i++){
+      if (newPlayerData[i].playerNum == playerNum){
+        newPlayerData.splice(i,1);
+        setPlayerData(newPlayerData);
+        return;
+      }
+    }
+
+  }  
 
   function checkPlayersReady(){
     const readyPlayers = playerData.filter(player => player.character);
@@ -201,7 +214,8 @@ function Hoster() {
         <QuestionAnswerScreen currentScreen = {currentScreen} showAnswer={showAnswer} showBoard={showBoard}
         question={currentQuestion.question} answer={currentQuestion.answer}/>}
       {currentScreen == 'wager' && <Wager />}
-      {currentScreen != 'room-menu' && <PlayerPanel playerData={playerData} correctOrIncorrectAnswer={correctOrIncorrectAnswer}/>}
+      {currentScreen != 'room-menu' && <PlayerPanel deletePlayer = {deletePlayer} deletePlayerVisible = {currentScreen == "room-menu"}
+       playerData={playerData} correctOrIncorrectAnswer={correctOrIncorrectAnswer}/>}
     </>
   )
 }
