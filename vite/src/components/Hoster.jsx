@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid';
 import questionsData from '../../questionsData.jsx'
 import characterData from '../../characterData.js'
 
+
 import Board from './Board.jsx'
 import PlayerPanel from './PlayerPanel.jsx'
 import QuestionAnswerScreen from './QuestionAnswerScreen.jsx'
@@ -15,7 +16,7 @@ import CharacterSelect from './CharacterSelect.jsx'
 var currentQuestion;
 var currentQuestionId;
 var questionsLeft = questionsData.rows * questionsData.columns;
-var playerCount = 4;
+var playerCount = 2;
 var room = ""
 
 //http://localhost:5173/
@@ -27,6 +28,7 @@ function Hoster() {
   const [boardState, setBoardState] = React.useState(initBoard());
   const [currentScreen, setCurrentScreen] = React.useState('room-menu');
   const [playerData, setPlayerData] = React.useState([]);
+  const [buzzed, setBuzzed] = React.useState(false);
   const playerDataRef = React.useRef();
   playerDataRef.current = playerData;
 
@@ -113,13 +115,17 @@ function Hoster() {
         addPlayer(playerNum);
       }
     });
-    /*
-    socket.on('buzz', (buzzer) => {
-      let snd = new Audio(buzzer);
-      snd.play();
-      console.log("hi");
+    
+    socket.on('buzz', ({playerNum, buzzer}) => {
+      if (!buzzed){
+        setBuzzed(true);
+        setBuzzedPlayer(playerNum);
+        socket.emit('disable buzzer', (room));
+        let snd = new Audio(buzzer);
+        snd.play();
+      }
     });
-    */
+    
   }, [])
 
   function setPlayerCharacter(playerNum, characterData){
@@ -171,6 +177,32 @@ function Hoster() {
     return readyPlayers.length + 1 == playerCount;
   }
 
+  
+  function setBuzzedPlayer(playerNum){
+
+    setPlayerData(oldPlayerData => {
+      const newPlayerData = [...oldPlayerData];
+      const targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+      targetPlayer.buzzed = true;
+      return newPlayerData;
+    })
+
+  }
+
+
+
+  function getBuzzedPlayers(){
+    return playerDataRef.current.filter(player => player.buzzed == true);
+  }
+
+  function unbuzzPlayers(){
+    setPlayerData(oldPlayerData => {
+      return oldPlayerData.map(player => ({...player, buzzed: false}));
+    })
+  }
+
+
+
   function greyOutQuestion(){
     setBoardState(oldBoardState => {
       let newBoardState = [...oldBoardState];
@@ -193,6 +225,7 @@ function Hoster() {
     currentQuestion = findQuestion(columnId, questionId, boardState);
     currentQuestionId = [columnId, questionId];
     setCurrentScreen('question');
+    socket.emit('enable valid buzzer', ({room, buzzedPlayers: []}))
   }
   
   function showAnswer(){
@@ -204,15 +237,33 @@ function Hoster() {
     greyOutQuestion()
   }
 
-  function correctOrIncorrectAnswer(playerNum, correct){
-    let newPlayerData = [...playerData];
-    let correctPlayer = newPlayerData.find(player => player.playerNum == playerNum);
-    correct? correctPlayer.money += currentQuestion.value : correctPlayer.money -= currentQuestion.value;
-    setPlayerData(newPlayerData);
 
-    correct && showAnswer();
+
+  function correctAnswer(playerNum){
+    setPlayerData(oldPlayerData => {
+      let newPlayerData = [...oldPlayerData];
+      let targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+      targetPlayer.money += currentQuestion.value;
+      return newPlayerData;
+    });
+
+    unbuzzPlayers();
+    showAnswer();
   }
 
+  function incorrectAnswer(playerNum){
+    setPlayerData(oldPlayerData => {
+      let newPlayerData = [...oldPlayerData];
+      let targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+      targetPlayer.money -= currentQuestion.value;
+      return newPlayerData;
+    });
+
+    const buzzedPlayers = getBuzzedPlayers();
+    console.log(`BUZZED PLAYERS:`);
+    console.log(buzzedPlayers)
+    socket.emit('enable valid buzzer', ({room, buzzedPlayers}));
+  }
 
   return (
     <>
@@ -224,7 +275,7 @@ function Hoster() {
         question={currentQuestion.question} answer={currentQuestion.answer}/>}
       {currentScreen == 'wager' && <Wager />}
       {currentScreen != 'room-menu' && <PlayerPanel deletePlayer = {deletePlayer} deletePlayerVisible = {currentScreen == "character-select"}
-       playerData={playerData} correctOrIncorrectAnswer={correctOrIncorrectAnswer}/>}
+       playerData={playerData} correctAnswer={correctAnswer} incorrectAnswer={incorrectAnswer}/>}
     </>
   )
 }

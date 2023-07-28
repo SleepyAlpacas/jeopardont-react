@@ -4,8 +4,8 @@ export default function Player(props){
     return (
     <div className="player">
         <div>
-            <button onClick={() => props.correctOrIncorrectAnswer(props.playerNum, true)}>Yep</button>
-            <button onClick={() => props.correctOrIncorrectAnswer(props.playerNum, false)}>Nope</button>
+            <button onClick={() => props.correctAnswer(props.playerNum)}>Yep</button>
+            <button onClick={() => props.incorrectAnswer(props.playerNum)}>Nope</button>
             {props.deletePlayerVisible && <button onClick={() => props.deletePlayer(props.playerNum)}>Banish</button>}
         </div>
         <h1 className="money" contentEditable="true">${props.money}</h1>
