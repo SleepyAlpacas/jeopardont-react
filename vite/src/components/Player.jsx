@@ -1,8 +1,9 @@
 import React from 'react'
 
 export default function Player(props){
+    const styles = {border: props.currentBuzzedPlayer? "5px solid red" : ""};
     return (
-    <div className="player">
+    <div style={styles} className="player">
         <div>
             <button onClick={() => props.correctAnswer(props.playerNum)}>Yep</button>
             <button onClick={() => props.incorrectAnswer(props.playerNum)}>Nope</button>

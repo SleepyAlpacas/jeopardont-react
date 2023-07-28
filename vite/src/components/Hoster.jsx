@@ -28,7 +28,8 @@ function Hoster() {
   const [boardState, setBoardState] = React.useState(initBoard());
   const [currentScreen, setCurrentScreen] = React.useState('room-menu');
   const [playerData, setPlayerData] = React.useState([]);
-  const [buzzed, setBuzzed] = React.useState(false);
+  const [currentBuzzedPlayer, setCurrentBuzzedPlayer] = React.useState();
+
   const playerDataRef = React.useRef();
   playerDataRef.current = playerData;
 
@@ -117,13 +118,13 @@ function Hoster() {
     });
     
     socket.on('buzz', ({playerNum, buzzer}) => {
-      if (!buzzed){
-        setBuzzed(true);
-        setBuzzedPlayer(playerNum);
-        socket.emit('disable buzzer', (room));
-        let snd = new Audio(buzzer);
-        snd.play();
-      }
+
+      setCurrentBuzzedPlayer(playerNum);
+      setBuzzedPlayer(playerNum);
+      socket.emit('disable buzzer', (room));
+      let snd = new Audio(buzzer);
+      snd.play();
+
     });
     
   }, [])
@@ -169,6 +170,8 @@ function Hoster() {
     }
 
   }  
+
+
 
   function checkPlayersReady(){
     console.log(playerDataRef.current);
@@ -229,6 +232,9 @@ function Hoster() {
   }
   
   function showAnswer(){
+    socket.emit('disable buzzer', (room));
+    unbuzzPlayers();
+    setCurrentBuzzedPlayer();
     setCurrentScreen('answer');
   }
 
@@ -247,7 +253,6 @@ function Hoster() {
       return newPlayerData;
     });
 
-    unbuzzPlayers();
     showAnswer();
   }
 
@@ -259,6 +264,7 @@ function Hoster() {
       return newPlayerData;
     });
 
+    setCurrentBuzzedPlayer();
     const buzzedPlayers = getBuzzedPlayers();
     console.log(`BUZZED PLAYERS:`);
     console.log(buzzedPlayers)
@@ -275,7 +281,7 @@ function Hoster() {
         question={currentQuestion.question} answer={currentQuestion.answer}/>}
       {currentScreen == 'wager' && <Wager />}
       {currentScreen != 'room-menu' && <PlayerPanel deletePlayer = {deletePlayer} deletePlayerVisible = {currentScreen == "character-select"}
-       playerData={playerData} correctAnswer={correctAnswer} incorrectAnswer={incorrectAnswer}/>}
+       playerData={playerData} correctAnswer={correctAnswer} incorrectAnswer={incorrectAnswer} currentBuzzedPlayer={currentBuzzedPlayer}/>}
     </>
   )
 }
