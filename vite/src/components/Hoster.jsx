@@ -43,18 +43,20 @@ function Hoster() {
   //initialize boardState to array of objects of column arrays of question objects
   function initBoard(){
       let initializedBoard = [];
+      let columnNum = 0;
       for (const column of questionsData['board-data']){
-        let boardColumn = column.map(question => {
+        let boardColumn = column.map((question, index) => {
             return {
               ...question,
               answered: false,
               playerAnswered: undefined,
               characterIcon: undefined,
+              rowNum: index,
               id: nanoid()
             }
           })
-  
-        initializedBoard.push({questions: boardColumn, columnId: nanoid()});
+        initializedBoard.push({questions: boardColumn, columnId: nanoid(), columnNum: columnNum});
+        columnNum++;
       }
       
       return initializedBoard;
@@ -132,8 +134,7 @@ function Hoster() {
     
     socket.on('power', ({playerNum}) => {
       console.log("POWER RECEIVED")
-      createPowerPopUp(playerNum);
-      decreasePowerUse(playerNum);
+      activatePower(playerNum);
     
       socket.emit('decrease powerUse', ({playerNum, room}))
     })
@@ -249,6 +250,102 @@ function Hoster() {
     setCurrentPowerPlayer();
   }
 
+  async function activatePower(playerNum){
+    const powerPlayer = playerDataRef.current.find(player => player.playerNum == playerNum);
+    switch(powerPlayer.character.name){
+      case "Mr. Happy":
+        //add Confetti
+        break;
+      case "Mr. Bump":
+        const random = Math.random();
+        const playerMoney = powerPlayer.money;
+        if (random < 50){
+          addMoney(playerNum, playerMoney);
+        }
+        else if (random < 90){
+          addMoney(playerNum , -playerMoney);
+        }
+        else{
+          const dividedMoney = Math.floor(playerMoney/playerCount);
+          addMoney(playerNum, -playerMoney);
+          for (let i = 0; i < playerCount; i++){
+            addMoney(playerNum, dividedMoney);
+          }
+        }
+        break;
+      
+        case "Michigan J. Frog":
+          addMoney(playerNum, -powerPlayer.money);
+          break;
+        case "Rocko":
+          //add rocko code
+        
+        case "Stimpy":
+          //add stimpy code
+        
+        case "Pompompurin":
+          //add purin code
+        
+        case "Christopher Nolan":
+          //add pause 
+    }
+
+    if (powerPlayer.name != "Mr. Happy"){
+      await createPowerPopUp(playerNum);
+    }
+
+    decreasePowerUse(playerNum);
+  }
+
+  function checkPowerOnCorrectAnswer(playerNum){
+    const powerPlayer = playerData.find(player => player.playerNum == playerNum);
+    switch (powerPlayer.character.name){
+      case "Mr. Clever":
+        powerPlayer.character.correctAnswerBonus += 50;
+        break;
+      case "Little Miss Lucky":
+        powerPlayer.character.correctAnswerBonus = Math.floor(Math.random() * 8 - 2) * 100
+        break;
+      case "Little Miss Twins":
+        const questionColumn = boardState.find(column => column.columnId == currentQuestionId[0]);
+        if (questionColumn.columnNum == currentQuestion.rowNum){
+          //check for downward diagonal bingo
+          
+        }
+        //bingo code
+        break;
+      case "Speedy Gonzales":
+        if (playerDataRef.current.filter(player => player.buzzed).length == 1){
+          powerPlayer.character.correctAnswerBonus = 50;
+        }
+        else {
+          powerPlayer.character.correctAnswerBonus = 0;
+        }
+        break;
+      case "Slowpoke Rodriguez":
+        if (playerDataRef.current.filter(player => player.buzzed).length == 1){
+          powerPlayer.character.correctAnswerBonus = 0;
+        }
+        else {
+          powerPlayer.character.correctAnswerBonus = 100;
+        }
+        break;
+      case "Porky Pig":
+        if (powerPlayer.character.correctAnswerBonus == 0){
+          for (const column of boardState){
+            const answeredQuestion = column.questions.find(question => question.playerAnswered == playerNum);
+            if (!answeredQuestion){
+              break;
+            }
+          }
+          powerPlayer.character.correctAnswerBonus = 100;
+        }
+        break;
+        //pig code
+      
+    }    
+  }
+
   function greyOutQuestion(){
     setBoardState(oldBoardState => {
       let newBoardState = [...oldBoardState];
@@ -350,8 +447,9 @@ function Hoster() {
     }
     else{
       const correctPlayer = playerData.find(player => player.playerNum == playerNum).character;
-      addMoney(playerNum, currentQuestion.value * correctPlayer.correctAnswerModifier + correctPlayer.correctAnswerBonus);
       setCorrectQuestion(playerNum);
+
+      addMoney(playerNum, currentQuestion.value * correctPlayer.correctAnswerModifier + correctPlayer.correctAnswerBonus);
       showAnswer();
     }
   }
