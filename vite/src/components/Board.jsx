@@ -16,7 +16,7 @@ export default function Board(props){
 
         const questionColumn = column.questions.map(question => 
             question.answered? 
-            <div className='board-cell' key={question.id}>${question.value}</div>:
+            <div className='board-cell' key={question.id}><img className='player-icon' src={question?.characterIcon}/></div>:
             <button onClick={() => props.showQuestion(column.columnId, question.id)} 
                 className='board-cell' key={question.id}>${question.value}</button>
 

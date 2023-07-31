@@ -5,6 +5,7 @@ const defaultCharacterTraits = {
     correctAnswerModifier: 1.0,
     correctAnswerBonus: 0,
     incorrectAnswerModifier: 1.0,
+    activatableOnScreen: [],
 }
 
 export default [
@@ -14,6 +15,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 1000,
+        activatableOnScreen: ['board', 'question', 'answer'],
         
         greenText: `Can activate to shower confetti onto the screen. Cooldown of 1 minute.`
 
@@ -24,6 +26,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 1,
+        activatableOnScreen: ['board'],
 
         yellowText: `Once per game power. Activate to have a 50% chance of doubling your money, 
         40% chance of losing all your money, 10% chance of spreading money evenly across all players`
@@ -35,6 +38,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 3,
+        activatableOnScreen: ['question'],
 
         greenText: `Three per game power. Activate after buzzing to ask another player what the answer is.`,
     },
@@ -54,6 +58,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 1,
+        activatableOnScreen: ['question'],
 
         greenText: `Once per game power. After buzzing, force another player to answer a question.`
     },
@@ -107,6 +112,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 3,
+        activatableOnScreen: ['question'],
 
         greenText: "Three per game power. Activate before answering a question to get 2 chances to answer a question correctly."
     },
@@ -117,6 +123,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 1,
+        activatableOnScreen: ['board'],
 
         greenText: "Once per game power. Activate to set money to $0"
     },
@@ -126,6 +133,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 2,
+        activatableOnScreen: ['board'],
 
         greenText: `Twice per game power. Before someone picks a question, you can activate this power
         to make the question take away points if someone answers it correctly. `
@@ -136,6 +144,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 2,
+        activatableOnScreen: ['board'],
 
         yellowText: `Twice per game power. Activate before picking a question to bet all your money on the next question (your money cannot be negative).`
     },
@@ -145,6 +154,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 1,
+        activatableOnScreen: ['question'],
 
         greenText: `Once per game power. Activate after buzzing in and get to ask ChatGPT any question that's 5 words or less.`
     },
@@ -163,6 +173,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 2,
+        activatableOnScreen: ['board'],
 
         greenText: `Twice per game power. Put yourself and another player in the prisoner's dilemma.`
     },
@@ -189,6 +200,7 @@ export default [
 
         ...defaultCharacterTraits,
         powerUses: 3,
+        activatableOnScreen: ['board', 'question', 'answer'],
 
         greenText: `Three per game ability. Can activate at any time to pause the game for 5 seconds (pausing also disables buzzers).`
     }

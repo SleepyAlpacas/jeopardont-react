@@ -11,11 +11,13 @@ import PlayerPanel from './PlayerPanel.jsx'
 import QuestionAnswerScreen from './QuestionAnswerScreen.jsx'
 import RoomMenu from './RoomMenu.jsx';
 import CharacterSelect from './CharacterSelect.jsx'
-
+import PowerPopUp from './PowerPopUp.jsx';
+import HosterWager from './HosterWager.jsx';
+import WinScreen from './WinScreen.jsx';
 
 var currentQuestion;
 var currentQuestionId;
-var questionsLeft = questionsData.rows * questionsData.columns;
+var questionsLeft = 2;
 var playerCount = 2;
 var room = ""
 
@@ -29,6 +31,7 @@ function Hoster() {
   const [currentScreen, setCurrentScreen] = React.useState('room-menu');
   const [playerData, setPlayerData] = React.useState([]);
   const [currentBuzzedPlayer, setCurrentBuzzedPlayer] = React.useState();
+  const [currentPowerPlayer, setCurrentPowerPlayer] = React.useState();
 
   const playerDataRef = React.useRef();
   playerDataRef.current = playerData;
@@ -46,7 +49,7 @@ function Hoster() {
               ...question,
               answered: false,
               playerAnswered: undefined,
-              characterAnswered: undefined,
+              characterIcon: undefined,
               id: nanoid()
             }
           })
@@ -78,7 +81,7 @@ function Hoster() {
           character: "",
           money: 0,
           buzzed: false,
-          powerUses: 0,
+          wager: undefined,
           id: nanoid()
         }
       ]
@@ -127,7 +130,27 @@ function Hoster() {
 
     });
     
+    socket.on('power', ({playerNum}) => {
+      console.log("POWER RECEIVED")
+      createPowerPopUp(playerNum);
+      decreasePowerUse(playerNum);
+    
+      socket.emit('decrease powerUse', ({playerNum, room}))
+    })
+
+    socket.on('submit wager', ({wagerAmount, playerNum}) => {
+      setWager(wagerAmount, playerNum);
+      if (checkWagersFull()){
+        currentQuestion = questionsData['final-jeopardy'];
+        setCurrentScreen('final-jeopardy');
+      }
+    })
+
   }, [])
+
+  React.useEffect(() => {
+    socket.emit('send currentScreen', ({currentScreen, room}));
+  }, [currentScreen]);
 
   function setPlayerCharacter(playerNum, characterData){
 
@@ -192,6 +215,16 @@ function Hoster() {
 
   }
 
+  function decreasePowerUse(playerNum){
+    setPlayerData(oldPlayerData => {
+      const newPlayerData = [...oldPlayerData];
+      const targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+      targetPlayer.character.powerUses--;
+      return newPlayerData;
+    })
+  }
+
+
 
 
   function getBuzzedPlayers(){
@@ -206,16 +239,40 @@ function Hoster() {
 
 
 
+  function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function createPowerPopUp(playerNum){
+    setCurrentPowerPlayer(playerNum);
+    await sleep(3000);
+    setCurrentPowerPlayer();
+  }
+
   function greyOutQuestion(){
     setBoardState(oldBoardState => {
       let newBoardState = [...oldBoardState];
       let greyedOutQuestion = findQuestion(currentQuestionId[0], currentQuestionId[1], newBoardState);
       greyedOutQuestion.answered = true;
+      
       return newBoardState;
     })
 
     questionsLeft--;
 
+  }
+
+  function setCorrectQuestion (correctPlayerNum){
+    setBoardState(oldBoardState => {
+      let newBoardState = [...oldBoardState];
+      let greyedOutQuestion = findQuestion(currentQuestionId[0], currentQuestionId[1], newBoardState);
+
+      let correctPlayer = playerData.find(player => player.playerNum == correctPlayerNum);
+      console.log(correctPlayer);
+      greyedOutQuestion.playerAnswered = correctPlayerNum;
+      greyedOutQuestion.characterIcon = correctPlayer.character.icon;
+      return newBoardState;
+    })
   }
 
   function findQuestion(columnId, questionId, boardArray){
@@ -234,54 +291,108 @@ function Hoster() {
   function showAnswer(){
     socket.emit('disable buzzer', (room));
     unbuzzPlayers();
+    greyOutQuestion()
     setCurrentBuzzedPlayer();
     setCurrentScreen('answer');
   }
 
   function showBoard(){
-    setCurrentScreen('board');
-    greyOutQuestion()
+    if (checkWagersFull()){
+      setCurrentScreen('win-screen');
+    }
+    else{
+      setCurrentScreen('board');
+      checkShowWager();
+    }
+  }
+
+  function checkShowWager(){
+    if (questionsLeft <= 0){
+      setCurrentScreen('wager');
+    }
   }
 
 
 
-  function correctAnswer(playerNum){
+  function setWager(wagerAmount, playerNum){
+    setPlayerData(oldPlayerData => {
+      const newPlayerData = [... oldPlayerData];
+      const targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+      targetPlayer.wager = wagerAmount;
+      return newPlayerData;
+    });
+  }
+
+  function checkWagersFull(){
+    const wagered = playerDataRef.current.filter(player => player.wager);
+    if (wagered.length >= playerCount - 1){
+      return true;
+    }
+    return false;
+  }
+
+
+  function addMoney(playerNum, moneyAmount){
     setPlayerData(oldPlayerData => {
       let newPlayerData = [...oldPlayerData];
       let targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
-      targetPlayer.money += currentQuestion.value;
+      targetPlayer.money += moneyAmount;
       return newPlayerData;
     });
 
-    showAnswer();
+    socket.emit('add money', ({moneyAmount, playerNum, room}));
+  }
+
+  function correctAnswer(playerNum){
+    if (currentScreen == 'final-jeopardy'){
+      const wageredMoney = playerData.find(player => player.playerNum == playerNum).wager;
+      addMoney(playerNum, wageredMoney);
+    }
+    else{
+      const correctPlayer = playerData.find(player => player.playerNum == playerNum).character;
+      addMoney(playerNum, currentQuestion.value * correctPlayer.correctAnswerModifier + correctPlayer.correctAnswerBonus);
+      setCorrectQuestion(playerNum);
+      showAnswer();
+    }
   }
 
   function incorrectAnswer(playerNum){
-    setPlayerData(oldPlayerData => {
-      let newPlayerData = [...oldPlayerData];
-      let targetPlayer = newPlayerData.find(player => player.playerNum == playerNum);
-      targetPlayer.money -= currentQuestion.value;
-      return newPlayerData;
-    });
+    if (currentScreen == 'final-jeopardy'){
+      const wageredMoney = playerData.find(player => player.playerNum == playerNum).wager;
+      addMoney(playerNum, -wageredMoney);
+    }
+    else{
+      const incorrectPlayer = playerData.find(player => player.playerNum == playerNum).character;
+      addMoney(playerNum, currentQuestion.value * incorrectPlayer.incorrectAnswerModifier);
+      addMoney(playerNum, -currentQuestion.value);
 
-    setCurrentBuzzedPlayer();
-    const buzzedPlayers = getBuzzedPlayers();
-    console.log(`BUZZED PLAYERS:`);
-    console.log(buzzedPlayers)
-    socket.emit('enable valid buzzer', ({room, buzzedPlayers}));
+      setCurrentBuzzedPlayer();
+      const buzzedPlayers = getBuzzedPlayers();
+      socket.emit('enable valid buzzer', ({room, buzzedPlayers}));
+    }
   }
+
+  function getWinningPlayers(){
+    const playerMoney = playerData.map(player => player.money);
+    const winningAmount = Math.max(...playerMoney);
+    return playerData.filter(player => player.money == winningAmount);
+  }
+
 
   return (
     <>
       {currentScreen == 'room-menu' && <RoomMenu handleButton={createRoom} host={true}/>}
       {currentScreen == 'character-select' && <CharacterSelect characterData={characterData}/>}
       {currentScreen == 'board' && <Board boardState = {boardState} titles={titles} showQuestion={showQuestion}/>}
-      {(currentScreen == 'question' || currentScreen == 'answer') && 
+      {(currentScreen == 'question' || currentScreen == 'answer' || currentScreen == 'final-jeopardy') && 
         <QuestionAnswerScreen currentScreen = {currentScreen} showAnswer={showAnswer} showBoard={showBoard}
         question={currentQuestion.question} answer={currentQuestion.answer}/>}
-      {currentScreen == 'wager' && <Wager />}
+      {currentScreen == 'wager' && <HosterWager />}
+      {currentScreen == 'win-screen' && <WinScreen winners={getWinningPlayers()}/>}
+
       {currentScreen != 'room-menu' && <PlayerPanel deletePlayer = {deletePlayer} deletePlayerVisible = {currentScreen == "character-select"}
        playerData={playerData} correctAnswer={correctAnswer} incorrectAnswer={incorrectAnswer} currentBuzzedPlayer={currentBuzzedPlayer}/>}
+      {currentPowerPlayer  >= 0 && <PowerPopUp playerData={playerData.find(player => player.playerNum == currentPowerPlayer)}/>}
     </>
   )
 }

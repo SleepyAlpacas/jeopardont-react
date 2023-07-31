@@ -55,11 +55,17 @@ io.on('connection', (socket)=>{
 
     });
 
+    socket.on('decrease powerUse', ({playerNum, room}) => {
+        io.to(room).emit('decrease powerUse', ({playerNum}))
+    });
+
+    socket.on('add money', ({moneyAmount, playerNum, room}) => {
+        io.to(room).emit('add money', ({moneyAmount, playerNum}));
+    })
+
     socket.on('buzz', ({playerNum, buzzer, room}) => {
         io.to(room).emit('buzz', ({playerNum, buzzer}));
     });
-
-
 
     socket.on('correct answer', () =>{
         io.emit('correct answer');
@@ -79,11 +85,14 @@ io.on('connection', (socket)=>{
         io.to(room).emit('enable valid buzzer', buzzedPlayers);
     });
 
-
-
-    socket.on('power', ({characterNum, playerNum, room}) =>{
-        io.to(room).emit('power', ({characterNum, playerNum}));
+    socket.on('power', ({playerNum, room}) =>{
+        io.to(room).emit('power', ({playerNum}));
     });
+
+    socket.on('send currentScreen', ({currentScreen, room}) => {
+        io.to(room).emit('send currentScreen', ({currentScreen}));
+        console.log(`Current Screen: ${currentScreen}`);
+    })
 
     socket.on('game state', ({gameState, room}) => {
         io.to(room).emit('game state', gameState);
@@ -93,8 +102,8 @@ io.on('connection', (socket)=>{
         io.to(room).emit('update money', ({playerNum, money}));
     });
 
-    socket.on('submit wager', ({playerNum, wagerAmount, room}) => {
-        io.to(room).emit('submit wager', ({playerNum, wagerAmount}));
+    socket.on('submit wager', ({wagerAmount, playerNum, room}) => {
+        io.to(room).emit('submit wager', ({wagerAmount, playerNum}));
     });
 
     socket.on('wager screen', room => {

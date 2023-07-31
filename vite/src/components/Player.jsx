@@ -9,7 +9,7 @@ export default function Player(props){
             <button onClick={() => props.incorrectAnswer(props.playerNum)}>Nope</button>
             {props.deletePlayerVisible && <button onClick={() => props.deletePlayer(props.playerNum)}>Banish</button>}
         </div>
-        <h1 className="money" contentEditable="true">${props.money}</h1>
+        <h1 contentEditable="true">${props.money}</h1>
         <img className="player-icon" src={props.character.icon}></img>
     </div>
     )
