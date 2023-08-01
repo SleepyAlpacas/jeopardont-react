@@ -134,6 +134,7 @@ export default [
         ...defaultCharacterTraits,
         powerUses: 2,
         activatableOnScreen: ['board'],
+        rockoed: false,
 
         greenText: `Twice per game power. Before someone picks a question, you can activate this power
         to make the question take away points if someone answers it correctly. `
@@ -202,7 +203,7 @@ export default [
         powerUses: 3,
         activatableOnScreen: ['board', 'question', 'answer'],
 
-        greenText: `Three per game ability. Can activate at any time to pause the game for 5 seconds (pausing also disables buzzers).`
+        greenText: `Three per game ability. Can activate at any time to pause the game for 5 seconds.`
     }
 
 ]

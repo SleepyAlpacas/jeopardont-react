@@ -14,10 +14,11 @@ import CharacterSelect from './CharacterSelect.jsx'
 import PowerPopUp from './PowerPopUp.jsx';
 import HosterWager from './HosterWager.jsx';
 import WinScreen from './WinScreen.jsx';
+import Pause from './Pause.jsx';
 
 var currentQuestion;
 var currentQuestionId;
-var questionsLeft = 2;
+var questionsLeft = questionsData.rows * questionsData.columns;
 var playerCount = 2;
 var room = ""
 
@@ -35,6 +36,8 @@ function Hoster() {
 
   const playerDataRef = React.useRef();
   playerDataRef.current = playerData;
+  const currentScreenRef = React.useRef();
+  currentScreenRef.current = currentScreen;
 
   const titles = initTitles();
 
@@ -252,6 +255,7 @@ function Hoster() {
 
   async function activatePower(playerNum){
     const powerPlayer = playerDataRef.current.find(player => player.playerNum == playerNum);
+    console.log(powerPlayer.character.name);
     switch(powerPlayer.character.name){
       case "Mr. Happy":
         //add Confetti
@@ -274,24 +278,42 @@ function Hoster() {
         }
         break;
       
-        case "Michigan J. Frog":
-          addMoney(playerNum, -powerPlayer.money);
-          break;
-        case "Rocko":
-          //add rocko code
-        
-        case "Stimpy":
-          //add stimpy code
-        
-        case "Pompompurin":
-          //add purin code
-        
-        case "Christopher Nolan":
-          //add pause 
+      case "Michigan J. Frog":
+        addMoney(playerNum, -powerPlayer.money);
+        break;
+      case "Rocko":
+        setPlayerData(oldPlayerData => {
+          const newPlayerData = [...oldPlayerData];
+          const rockoPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+          rockoPlayer.character.rockoed = true;
+          return newPlayerData;
+        });
+        break;
+      
+      case "Stimpy":
+        setPlayerData(oldPlayerData => {
+          const newPlayerData = [...oldPlayerData];
+          const stimpyPlayer = newPlayerData.find(player => player.playerNum == playerNum);
+          stimpyPlayer.character.correctAnswerBonus = stimpyPlayer.money * 2;
+          stimpyPlayer.character.correctAnswerModifier = 0;
+          addMoney(playerNum, -stimpyPlayer.money);
+          return newPlayerData;
+        });
+        break;
+      
+      case "Pompompurin":
+        //add purin code
+      
+      case "Christopher Nolan":
+        const previousScreen = currentScreenRef.current;
+        setCurrentScreen('pause');
+        await sleep(5000);
+        setCurrentScreen(previousScreen);
     }
 
-    if (powerPlayer.name != "Mr. Happy"){
-      await createPowerPopUp(playerNum);
+    const noPopupCharacters = ["Mr. Happy", "Rocko", "Christopher Nolan"]
+    if (!noPopupCharacters.includes(powerPlayer.character.name)){
+      createPowerPopUp(playerNum);
     }
 
     decreasePowerUse(playerNum);
@@ -308,11 +330,62 @@ function Hoster() {
         break;
       case "Little Miss Twins":
         const questionColumn = boardState.find(column => column.columnId == currentQuestionId[0]);
-        if (questionColumn.columnNum == currentQuestion.rowNum){
+        console.log(questionColumn);
+        console.log(currentQuestion);
+        if (questionsData.columns == questionsData.rows){
+          //checking for diagonal bingo
+
           //check for downward diagonal bingo
-          
+          if (questionColumn.columnNum == currentQuestion.rowNum){
+            for (let i = 0; i < boardState.length; i++){
+              const diagonalQuestion = boardState.columns[i].questions.find(question => question.rowNum == i);
+              if (diagonalQuestion.playerAnswered != playerNum && diagonalQuestion != currentQuestion){
+                console.log(`DOWNWARD DIAGONAL BROKE AT ${i}`)
+                console.log(diagonalQuestion);
+                break;
+              }
+              if (i == boardState.length - 1){
+                addMoney(playerNum, 2500);
+              }
+            }
+          }
+
+          //checking for upward diagonal bingo
+          if (questionColumn.columnNum + currentQuestion.rowNum == questionsData.columns){
+            for (let i = 0; i < boardState.length; i++){
+              const diagonalQuestion = boardState.columns[i].questions.find(question => question.rowNum == questionsData.columns - i);
+              if (diagonalQuestion.playerAnswered != playerNum && diagonalQuestion != currentQuestion){
+                console.log(`UPWARD DIAGONAL BROKE AT ${i}`)
+                console.log(diagonalQuestion);
+                break;
+              }
+              if (i == boardState.length - 1){
+                addMoney(playerNum, 2500);
+              }
+            }
+          }
         }
-        //bingo code
+
+        //check vertical bingo
+        const verticalUnansweredQuestion = questionColumn.questions.filter(question => question.playerAnswered != playerNum);
+        console.log(`VERTICAL`)
+        console.log(verticalUnansweredQuestion)
+        if (verticalUnansweredQuestion.length == 1){
+          addMoney(playerNum, 2500);
+        }
+
+        //check horizontal bingo
+        for (let i = 0; i < boardState.length; i++){
+          const horizontalQuestion = boardState[i].questions.find(question => question.rowNum == currentQuestion.rowNum);
+          if (horizontalQuestion.playerAnswered != playerNum && horizontalQuestion != currentQuestion){
+            console.log(`HORIZONTAL BROKE AT ${i}`)
+            console.log(horizontalQuestion);
+            break;
+          }
+          if (i == boardState.length - 1){
+            addMoney(playerNum, 2500);
+          }
+        }
         break;
       case "Speedy Gonzales":
         if (playerDataRef.current.filter(player => player.buzzed).length == 1){
@@ -335,15 +408,57 @@ function Hoster() {
           for (const column of boardState){
             const answeredQuestion = column.questions.find(question => question.playerAnswered == playerNum);
             if (!answeredQuestion){
-              break;
+              return
             }
           }
           powerPlayer.character.correctAnswerBonus = 100;
         }
         break;
-        //pig code
       
     }    
+  }
+
+  function checkRockoPower(){
+    const rockos = playerData.filter(player => player.character.name == "Rocko");
+    if (rockos.find(player => player.character.rockoed)){
+      createPowerPopUp(rockos[0].playerNum);
+      return true;
+    }
+    return false;
+  }
+
+  function disableRockoPower(){
+    const rockoInGame = playerData.find(player => player.character.name == "Rocko");
+    if (rockoInGame){
+      setPlayerData(oldPlayerData => {
+        const newPlayerData = [...oldPlayerData];
+        const rockos = newPlayerData.filter(player => player.character.name == "Rocko");
+        for (const rocko of rockos){
+          rocko.character.rockoed = false;
+        }
+        return newPlayerData;
+      })
+    }
+  }
+
+  function restoreStimpy(){
+    const stimpyInGame = playerData.find(player => player.character.name == "Stimpy");
+    if (stimpyInGame){
+      setPlayerData(oldPlayerData => {
+        const newPlayerData = [...oldPlayerData];
+        const stimpys = newPlayerData.filter(player => player.character.name == "Stimpy");
+        for (const stimpy of stimpys){
+          stimpy.character.correctAnswerBonus = 0;
+          stimpy.character.correctAnswerModifier = 1.0;
+        }
+        return newPlayerData;
+      })
+    }
+  }
+
+  function restoreCharacters(){
+    disableRockoPower();
+    restoreStimpy();
   }
 
   function greyOutQuestion(){
@@ -390,6 +505,7 @@ function Hoster() {
     unbuzzPlayers();
     greyOutQuestion()
     setCurrentBuzzedPlayer();
+    restoreCharacters();
     setCurrentScreen('answer');
   }
 
@@ -448,8 +564,13 @@ function Hoster() {
     else{
       const correctPlayer = playerData.find(player => player.playerNum == playerNum).character;
       setCorrectQuestion(playerNum);
-
-      addMoney(playerNum, currentQuestion.value * correctPlayer.correctAnswerModifier + correctPlayer.correctAnswerBonus);
+      checkPowerOnCorrectAnswer(playerNum);
+      if (checkRockoPower()){
+        addMoney(playerNum, -currentQuestion.value);
+      }
+      else{
+        addMoney(playerNum, currentQuestion.value * correctPlayer.correctAnswerModifier + correctPlayer.correctAnswerBonus);
+      }
       showAnswer();
     }
   }
@@ -461,8 +582,7 @@ function Hoster() {
     }
     else{
       const incorrectPlayer = playerData.find(player => player.playerNum == playerNum).character;
-      addMoney(playerNum, currentQuestion.value * incorrectPlayer.incorrectAnswerModifier);
-      addMoney(playerNum, -currentQuestion.value);
+      addMoney(playerNum, -currentQuestion.value * incorrectPlayer.incorrectAnswerModifier);
 
       setCurrentBuzzedPlayer();
       const buzzedPlayers = getBuzzedPlayers();
@@ -487,6 +607,7 @@ function Hoster() {
         question={currentQuestion.question} answer={currentQuestion.answer}/>}
       {currentScreen == 'wager' && <HosterWager />}
       {currentScreen == 'win-screen' && <WinScreen winners={getWinningPlayers()}/>}
+      {currentScreen == 'pause' && <Pause />}
 
       {currentScreen != 'room-menu' && <PlayerPanel deletePlayer = {deletePlayer} deletePlayerVisible = {currentScreen == "character-select"}
        playerData={playerData} correctAnswer={correctAnswer} incorrectAnswer={incorrectAnswer} currentBuzzedPlayer={currentBuzzedPlayer}/>}
