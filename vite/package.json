@@ -2,7 +2,7 @@
   "name": "vite",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://sleepyalpacas.github.io/jeopardont-react",
+  "homepage": "https://sleepyalpacas.github.io/jeopardont-react/",
   "type": "module",
   "scripts": {
     "dev": "vite",
